@@ -7,3 +7,4 @@ openai
 tiktoken
 chromadb
 python-dotenv
+GitPython

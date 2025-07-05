@@ -12,9 +12,14 @@
             <p class="subtitle">Upload your code repo and ask AI anything!</p>
 
             <form id="uploadForm" enctype="multipart/form-data">
-                <label for="file">📁 Upload Repo (.zip)</label>
-                <input type="file" id="file" name="file" required>
-                <button type="submit" id="uploadBtn">Upload & Index</button>
+                <label for="githubUrl">🔗 GitHub Repo URL (Optional)</label>
+                <input type="text" id="githubUrl" name="githubUrl" placeholder="https://github.com/user/repo">
+
+                <label for="file">📁 Or Upload Repo (.zip)</label>
+                <input type="file" id="file" name="file">
+
+                <button type="submit" id="uploadBtn">Upload / Clone</button>
+
                 <div id="uploadSpinner" class="spinner hidden"></div>
                 <div id="uploadStatus" class="status"></div>
             </form>
@@ -40,9 +45,25 @@
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(uploadForm);
-            uploadSpinner.classList.remove("hidden");
-            uploadStatus.innerText = "⏳ Uploading and indexing...";
+            const githubUrl = document.getElementById("githubUrl").value.trim();
+            const file = document.getElementById("file").files[0];
+
             uploadBtn.disabled = true;
+            uploadSpinner.classList.remove("hidden");
+
+            if (githubUrl !== "") {
+                uploadStatus.innerText = "🔄 Cloning GitHub repository...";
+                uploadStatus.className = "status cloning";
+            } else if (file) {
+                uploadStatus.innerText = "⏳ Uploading and indexing...";
+                uploadStatus.className = "status";
+            } else {
+                uploadStatus.innerText = "⚠️ Please enter a GitHub URL or upload a ZIP file.";
+                uploadStatus.className = "status error";
+                uploadSpinner.classList.add("hidden");
+                uploadBtn.disabled = false;
+                return;
+            }
 
             try {
                 const response = await fetch("/upload", {
@@ -50,13 +71,13 @@
                     body: formData
                 });
 
-                if (!response.ok) throw new Error("Upload failed");
+                if (!response.ok) throw new Error("Upload or clone failed");
 
                 const result = await response.json();
                 uploadStatus.innerText = "✅ " + result.message;
                 uploadStatus.className = "status success";
             } catch (error) {
-                uploadStatus.innerText = "❌ " + error.message;
+                uploadStatus.innerText = "❌ Error: " + error.message;
                 uploadStatus.className = "status error";
             } finally {
                 uploadSpinner.classList.add("hidden");
@@ -67,6 +88,7 @@
         askForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(askForm);
+
             answerBox.innerText = "🔎 Thinking...";
             askBtn.disabled = true;
 
@@ -75,6 +97,8 @@
                     method: "POST",
                     body: formData
                 });
+
+                if (!response.ok) throw new Error("Answer fetch failed");
 
                 const result = await response.json();
                 answerBox.innerText = result.answer;
@@ -85,5 +109,7 @@
             }
         });
     </script>
+
+
 </body>
 </html>

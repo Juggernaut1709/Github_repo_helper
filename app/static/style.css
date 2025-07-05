@@ -96,6 +96,7 @@ button:hover {
     padding: 1rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.5rem;
+
 }
 
 .spinner {
@@ -110,6 +111,10 @@ button:hover {
 
 .hidden {
     display: none;
+}
+
+.cloning {
+    color: orange;
 }
 
 @keyframes spin {
