@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Repo Helper</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🚀 GitHub Repo Helper</h1>
+            <p class="subtitle">Upload your code repo and ask AI anything!</p>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <label for="file">📁 Upload Repo (.zip)</label>
+                <input type="file" id="file" name="file" required>
+                <button type="submit" id="uploadBtn">Upload & Index</button>
+                <div id="uploadSpinner" class="spinner hidden"></div>
+                <div id="uploadStatus" class="status"></div>
+            </form>
+
+            <form id="askForm">
+                <label for="question">❓ Ask a Question</label>
+                <input type="text" id="question" name="question" placeholder="e.g. What does main.py do?" required>
+                <button type="submit" id="askBtn">Ask</button>
+                <div id="answerBox" class="answer"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const askForm = document.getElementById('askForm');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadSpinner = document.getElementById('uploadSpinner');
+        const answerBox = document.getElementById('answerBox');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const askBtn = document.getElementById('askBtn');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+            uploadSpinner.classList.remove("hidden");
+            uploadStatus.innerText = "⏳ Uploading and indexing...";
+            uploadBtn.disabled = true;
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Upload failed");
+
+                const result = await response.json();
+                uploadStatus.innerText = "✅ " + result.message;
+                uploadStatus.className = "status success";
+            } catch (error) {
+                uploadStatus.innerText = "❌ " + error.message;
+                uploadStatus.className = "status error";
+            } finally {
+                uploadSpinner.classList.add("hidden");
+                uploadBtn.disabled = false;
+            }
+        });
+
+        askForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(askForm);
+            answerBox.innerText = "🔎 Thinking...";
+            askBtn.disabled = true;
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                answerBox.innerText = result.answer;
+            } catch (error) {
+                answerBox.innerText = "❌ Error: " + error.message;
+            } finally {
+                askBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
